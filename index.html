@@ -1,240 +1,148 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Générateur MCII</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root{
+      --bg:#000;               /* fond noir pur */
+      --fg:#fff;               /* texte blanc pur */
+      --muted:#b7b7b7;         /* texte secondaire */
+      --panel:#0d0d0d;         /* cartes/panneaux */
+      --panel-2:#121212;       /* variantes */
+      --line:#1f1f1f;          /* traits/bordures */
+      --accent:#ffffff;        /* accent blanc par défaut */
+      --accent-2:#9ae6b4;      /* vert doux pour plan */
+      --accent-3:#a78bfa;      /* violet pour obstacles */
+      --accent-4:#93c5fd;      /* bleu pour souhait/résultat */
+      --shadow: 0 20px 60px rgba(0,0,0,.6);
+      --radius-1: 18px;
+      --radius-2: 12px;
+      --space: clamp(16px, 2vw, 24px);
+      --font: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,system-ui,sans-serif;
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
-      min-height: 100vh;
-      padding: 2rem;
-      color: #e0e0e0;
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      line-height:1.5;
+      padding: clamp(16px, 3vw, 32px);
     }
 
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
+    .container{ max-width: 840px; margin: 0 auto; }
+
+    /* Barre de progression */
+    .progress-bar-wrapper{ margin-bottom: calc(var(--space) * 1.2); }
+    .progress-info{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:8px; font-size:.95rem; color: var(--muted);
+    }
+    .progress-track{
+      width:100%; height:10px; background:#111; border-radius:999px; border:1px solid var(--line);
+      overflow:hidden;
+    }
+    .progress-fill{
+      height:100%; width:0%;
+      background: linear-gradient(90deg, #fff 0%, #aaa 100%); /* blanc -> gris clair */
+      border-radius:999px; transition: width .3s ease;
     }
 
-    .progress-bar-wrapper {
-      margin-bottom: 2rem;
+    /* Carte */
+    .card{
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border:1px solid var(--line);
+      border-radius: var(--radius-1);
+      box-shadow: var(--shadow);
+      padding: clamp(20px, 3.5vw, 36px);
+    }
+    .card-header{ margin-bottom: var(--space); }
+    .card-title{ font-size: clamp(1.4rem, 2.2vw, 2rem); font-weight:800; letter-spacing:.2px; }
+    .card-subtitle{ color: var(--muted); font-style: italic; margin-top:6px; }
+
+    .description{ color:#d6d6d6; margin: 14px 0 var(--space); }
+
+    textarea{
+      width:100%; min-height:160px;
+      background:#0b0b0b; color:var(--fg);
+      border:1px solid var(--line); border-radius: var(--radius-2);
+      padding:14px 16px; font: inherit; resize: vertical;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    textarea::placeholder{ color:#7a7a7a; }
+    textarea:focus{
+      outline:none; border-color:#fff; box-shadow: 0 0 0 4px rgba(255,255,255,.06);
     }
 
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      font-size: 0.875rem;
-      color: #60a5fa;
+    .optional-note{ margin-top:8px; color:#9b9b9b; font-size:.92rem; }
+
+    /* Boutons */
+    .button-group{ display:flex; gap:10px; margin-top: calc(var(--space) * 0.9); flex-wrap:wrap; }
+    button{
+      appearance:none; border:none; cursor:pointer; font-weight:700; font-size:1rem;
+      padding:12px 16px; border-radius:12px; transition: transform .08s ease, background .2s ease, color .2s ease, border-color .2s ease;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    button:active{ transform: translateY(1px) scale(0.998); }
+    button:focus-visible{ outline: 3px solid #fff; outline-offset:2px; }
+
+    .btn-primary{
+      flex:1 1 220px;
+      background:#fff; color:#000;
+    }
+    .btn-primary:hover{ background:#e7e7e7; }
+
+    .btn-secondary{
+      background:transparent; color:#fff; border:1px solid var(--line);
+    }
+    .btn-secondary:hover{ border-color:#fff; }
+
+    /* Résumé vertical (étapes les unes sous les autres) */
+    .summary-section{
+      background:#0b0b0b;
+      border:1px solid var(--line);
+      border-left:4px solid #fff;
+      border-radius: 12px;
+      padding:16px;
+      margin-bottom:14px;
+    }
+    .summary-section.wish{ border-left-color: var(--accent-4); }
+    .summary-section.result{ border-left-color: #ffffff; }
+    .summary-section.obstacle{ border-left-color: var(--accent-3); }
+    .summary-section.plan{ border-left-color: var(--accent-2); }
+
+    .summary-title{ font-size:1.15rem; font-weight:800; margin-bottom:8px; }
+    .summary-content{ color:#e8e8e8; }
+    .summary-item{ margin:10px 0; }
+    .summary-label{ color:#bdbdbd; font-weight:700; font-size:.9rem; margin-bottom:2px; }
+
+    .celebration-title{ font-size: clamp(1.8rem, 3vw, 2.4rem); text-align:center; margin-bottom:6px; }
+    .celebration-subtitle{ text-align:center; color:#d0d0d0; margin-bottom:18px; }
+    .date-text{ text-align:center; color:#9b9b9b; margin-top:16px; font-size:.95rem; }
+
+    /* Barre du haut épurée */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin-bottom:18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px;
+    }
+    .dot{ width:10px; height:10px; border-radius:50%; background:#fff; display:inline-block; }
+
+    /* Accessibilité: réduire les animations si demandé */
+    @media (prefers-reduced-motion: reduce){
+      .progress-fill, button{ transition:none; }
     }
 
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: #2d2d44;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
-      border-radius: 999px;
-      transition: width 0.3s ease;
-    }
-
-    .card {
-      background: #1e1e2e;
-      border-radius: 1.5rem;
-      padding: 3rem;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      border: 1px solid #2d2d44;
-    }
-
-    .card-header {
-      margin-bottom: 2rem;
-    }
-
-    .card-title {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #f0f0f0;
-      margin-bottom: 0.5rem;
-    }
-
-    .card-subtitle {
-      color: #60a5fa;
-      font-style: italic;
-      font-size: 1rem;
-    }
-
-    .description {
-      color: #a0a0b0;
-      margin-bottom: 1.5rem;
-      line-height: 1.6;
-    }
-
-    textarea {
-      width: 100%;
-      height: 160px;
-      padding: 1rem;
-      background: #252535;
-      border: 2px solid #3d3d55;
-      border-radius: 1rem;
-      color: #e0e0e0;
-      font-size: 1rem;
-      font-family: inherit;
-      resize: none;
-      transition: border-color 0.3s ease;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
-
-    textarea::placeholder {
-      color: #6b6b80;
-    }
-
-    .optional-note {
-      font-size: 0.875rem;
-      color: #8b8b9e;
-      margin-top: 0.5rem;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    button {
-      padding: 0.875rem 1.5rem;
-      border: none;
-      border-radius: 1rem;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      justify-content: center;
-    }
-
-    .btn-primary {
-      flex: 1;
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-    }
-
-    .btn-secondary {
-      background: #2d2d44;
-      color: #e0e0e0;
-      border: 2px solid #3d3d55;
-    }
-
-    .btn-secondary:hover {
-      background: #3d3d55;
-    }
-
-    .summary-section {
-      background: #252535;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      border-left: 4px solid;
-    }
-
-    .summary-section.wish {
-      border-left-color: #3b82f6;
-    }
-
-    .summary-section.result {
-      border-left-color: #60a5fa;
-    }
-
-    .summary-section.obstacle {
-      border-left-color: #8b5cf6;
-    }
-
-    .summary-section.plan {
-      border-left-color: #10b981;
-    }
-
-    .summary-title {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: #f0f0f0;
-      margin-bottom: 1rem;
-    }
-
-    .summary-content {
-      color: #b0b0c0;
-      line-height: 1.6;
-    }
-
-    .summary-item {
-      margin-bottom: 1rem;
-    }
-
-    .summary-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #8b8b9e;
-      margin-bottom: 0.25rem;
-    }
-
-    .celebration-title {
-      font-size: 2.5rem;
-      text-align: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .celebration-subtitle {
-      text-align: center;
-      color: #60a5fa;
-      margin-bottom: 2rem;
-    }
-
-    .date-text {
-      text-align: center;
-      color: #6b6b80;
-      font-size: 0.875rem;
-      margin-top: 1.5rem;
-    }
-
-    @media (max-width: 640px) {
-      body {
-        padding: 1rem;
-      }
-
-      .card {
-        padding: 1.5rem;
-      }
-
-      .card-title {
-        font-size: 1.5rem;
-      }
-
-      .button-group {
-        flex-direction: column;
-      }
+    @media (max-width:640px){
+      body{ padding:16px; }
+      .button-group{ flex-direction:column; }
+      .btn-primary{ flex:1 1 auto; }
     }
   </style>
 </head>
@@ -242,87 +150,77 @@
   <div class="container" id="app"></div>
 
   <script>
+    /* --------------------------
+       Données & état
+    ---------------------------*/
     const steps = [
-      {
-        title: 'Mon Souhait',
-        subtitle: 'Prends 2 minutes pour identifier ton objectif',
-        field: 'souhait',
-        placeholder: 'Quel est ton souhait ou objectif principal ?',
-        description: 'Pense à quelque chose qui compte vraiment pour toi et que tu aimerais accomplir.'
-      },
-      {
-        title: 'Mon Meilleur Résultat',
-        subtitle: 'Prends 3 minutes pour visualiser le meilleur résultat possible',
-        field: 'meilleurResultat',
-        placeholder: 'Imagine le meilleur résultat possible si tu atteins ton souhait...',
-        description: 'Visualise concrètement ce que tu ressentirais et ce qui changerait dans ta vie.'
-      },
-      {
-        title: 'Ton Obstacle Principal',
-        subtitle: 'Prends 3 minutes pour identifier ce qui pourrait t\'empêcher de réussir',
-        field: 'obstacle1',
-        placeholder: 'Quel est ton obstacle principal ?',
-        description: 'Sois honnête avec toi-même sur ce qui pourrait vraiment te bloquer.'
-      },
-      {
-        title: 'Ton Second Obstacle (optionnel)',
-        subtitle: 'Prends 2 minutes si tu veux identifier un autre obstacle',
-        field: 'obstacle2',
-        placeholder: 'Y a-t-il un autre obstacle important ?',
-        description: 'Cette étape est facultative, tu peux passer à la suite si tu veux.',
-        optional: true
-      },
-      {
-        title: 'Ton Plan d\'Action',
-        subtitle: 'Prends 4 minutes pour créer ton plan concret',
-        field: 'plan1',
-        placeholder: 'Si [obstacle], alors je vais [action concrète]...',
-        description: 'Formule un plan d\'action clair : "Si [situation], alors je [action]".'
-      },
-      {
-        title: 'Ton Second Plan (optionnel)',
-        subtitle: 'Prends 3 minutes si tu veux ajouter un plan alternatif',
-        field: 'plan2',
-        placeholder: 'Si [autre situation], alors je vais [autre action]...',
-        description: 'Tu peux créer un second plan pour renforcer ta stratégie.',
-        optional: true
-      }
+      { title:'Mon Souhait', subtitle:'Prends 2 minutes pour identifier ton objectif', field:'souhait',
+        placeholder:'Quel est ton souhait ou objectif principal ?',
+        description:'Pense à quelque chose qui compte vraiment pour toi et que tu aimerais accomplir.' },
+      { title:'Mon Meilleur Résultat', subtitle:'Prends 3 minutes pour visualiser le meilleur résultat possible', field:'meilleurResultat',
+        placeholder:'Imagine le meilleur résultat possible si tu atteins ton souhait...',
+        description:'Visualise concrètement ce que tu ressentirais et ce qui changerait dans ta vie.' },
+      { title:'Ton Obstacle Principal', subtitle:'Prends 3 minutes pour identifier ce qui pourrait t’empêcher de réussir', field:'obstacle1',
+        placeholder:'Quel est ton obstacle principal ?',
+        description:'Sois honnête avec toi-même sur ce qui pourrait vraiment te bloquer.' },
+      { title:'Ton Second Obstacle (optionnel)', subtitle:'Prends 2 minutes si tu veux identifier un autre obstacle', field:'obstacle2',
+        placeholder:'Y a-t-il un autre obstacle important ?',
+        description:'Cette étape est facultative, tu peux passer à la suite si tu veux.', optional:true },
+      { title:'Ton Plan d’Action', subtitle:'Prends 4 minutes pour créer ton plan concret', field:'plan1',
+        placeholder:'Si [obstacle], alors je vais [action concrète]...',
+        description:'Formule un plan d’action clair : "Si [situation], alors je [action]".' },
+      { title:'Ton Second Plan (optionnel)', subtitle:'Prends 3 minutes si tu veux ajouter un plan alternatif', field:'plan2',
+        placeholder:'Si [autre situation], alors je vais [autre action]...',
+        description:'Tu peux créer un second plan pour renforcer ta stratégie.', optional:true }
     ];
 
-    let currentStep = 0;
-    let data = {
-      souhait: '',
-      meilleurResultat: '',
-      obstacle1: '',
-      obstacle2: '',
-      plan1: '',
-      plan2: ''
+    const STORAGE_KEY = 'mcii_state_v2';
+
+    let state = loadState() ?? {
+      currentStep: 0,
+      data: { souhait:'', meilleurResultat:'', obstacle1:'', obstacle2:'', plan1:'', plan2:'' }
     };
 
-    function render() {
+    /* --------------------------
+       Rendu
+    ---------------------------*/
+    function render(){
       const app = document.getElementById('app');
-      
-      if (currentStep === steps.length) {
+      if(!app) return;
+
+      if(state.currentStep === steps.length){
         app.innerHTML = renderSummary();
-      } else {
+      }else{
         app.innerHTML = renderStep();
       }
-      
+
       attachEventListeners();
     }
 
-    function renderStep() {
-      const step = steps[currentStep];
-      const progress = ((currentStep + 1) / steps.length) * 100;
+    function renderTopbar(){
+      return `
+        <div class="topbar" aria-label="En-tête">
+          <div class="brand"><span class="dot" aria-hidden="true"></span> Générateur MCII</div>
+          <button class="btn-secondary" type="button" onclick="handleRestart()" title="Réinitialiser">
+            ↺ Réinitialiser
+          </button>
+        </div>
+      `;
+    }
+
+    function renderStep(){
+      const step = steps[state.currentStep];
+      const progress = ((state.currentStep + 1) / steps.length) * 100;
 
       return `
-        <div class="progress-bar-wrapper">
+        ${renderTopbar()}
+        <div class="progress-bar-wrapper" aria-label="Progression">
           <div class="progress-info">
-            <span>Étape ${currentStep + 1} sur ${steps.length}</span>
+            <span>Étape ${state.currentStep + 1} sur ${steps.length}</span>
             <span>${Math.round(progress)}%</span>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${progress}%"></div>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}">
+            <div class="progress-fill" style="width:${progress}%"></div>
           </div>
         </div>
 
@@ -334,78 +232,69 @@
 
           <p class="description">${step.description}</p>
 
-          <textarea 
-            id="input-field" 
-            placeholder="${step.placeholder}"
-          >${data[step.field]}</textarea>
-
+          <label for="input-field" class="sr-only">Saisie pour: ${step.title}</label>
+          <textarea id="input-field" placeholder="${step.placeholder}">${state.data[step.field] ?? ''}</textarea>
           ${step.optional ? '<p class="optional-note">✨ Cette étape est optionnelle</p>' : ''}
 
           <div class="button-group">
-            ${currentStep > 0 ? '<button class="btn-secondary" onclick="handleBack()">Retour</button>' : ''}
-            ${step.optional ? '<button class="btn-secondary" onclick="handleSkip()">Passer</button>' : ''}
-            <button class="btn-primary" onclick="handleNext()">
-              ${currentStep === steps.length - 1 ? 'Terminer' : 'Continuer'}
-              <span>→</span>
+            ${state.currentStep > 0 ? '<button class="btn-secondary" type="button" onclick="handleBack()">← Retour</button>' : ''}
+            ${step.optional ? '<button class="btn-secondary" type="button" onclick="handleSkip()">Passer</button>' : ''}
+            <button class="btn-primary" type="button" onclick="handleNext()">
+              ${state.currentStep === steps.length - 1 ? 'Terminer' : 'Continuer'} →
             </button>
           </div>
         </div>
       `;
     }
 
-    function renderSummary() {
+    function renderSummary(){
       return `
+        ${renderTopbar()}
         <div class="card">
           <h1 class="celebration-title">Félicitations ! 🎉</h1>
           <p class="celebration-subtitle">Tu as complété ton MCII</p>
 
           <div class="summary-section wish">
             <h3 class="summary-title">Mon Souhait</h3>
-            <p class="summary-content">${data.souhait}</p>
+            <p class="summary-content">${safe(state.data.souhait)}</p>
           </div>
 
           <div class="summary-section result">
             <h3 class="summary-title">Mon Meilleur Résultat</h3>
-            <p class="summary-content">${data.meilleurResultat}</p>
+            <p class="summary-content">${safe(state.data.meilleurResultat)}</p>
           </div>
 
           <div class="summary-section obstacle">
-            <h3 class="summary-title">${data.obstacle2 ? 'Mes Obstacles Principaux' : 'Mon Obstacle Principal'}</h3>
+            <h3 class="summary-title">${state.data.obstacle2 ? 'Mes Obstacles Principaux' : 'Mon Obstacle Principal'}</h3>
             <div class="summary-item">
               <p class="summary-label">Principal</p>
-              <p class="summary-content">${data.obstacle1}</p>
+              <p class="summary-content">${safe(state.data.obstacle1)}</p>
             </div>
-            ${data.obstacle2 ? `
+            ${state.data.obstacle2 ? `
               <div class="summary-item">
                 <p class="summary-label">Second</p>
-                <p class="summary-content">${data.obstacle2}</p>
-              </div>
-            ` : ''}
+                <p class="summary-content">${safe(state.data.obstacle2)}</p>
+              </div>` : ''
+            }
           </div>
 
           <div class="summary-section plan">
-            <h3 class="summary-title">${data.plan2 ? 'Mes Plans d\'Action' : 'Mon Plan d\'Action'}</h3>
+            <h3 class="summary-title">${state.data.plan2 ? "Mes Plans d'Action" : "Mon Plan d'Action"}</h3>
             <div class="summary-item">
               <p class="summary-label">Plan 1</p>
-              <p class="summary-content">${data.plan1}</p>
+              <p class="summary-content">${safe(state.data.plan1)}</p>
             </div>
-            ${data.plan2 ? `
+            ${state.data.plan2 ? `
               <div class="summary-item">
                 <p class="summary-label">Plan 2</p>
-                <p class="summary-content">${data.plan2}</p>
-              </div>
-            ` : ''}
+                <p class="summary-content">${safe(state.data.plan2)}</p>
+              </div>` : ''
+            }
           </div>
 
           <div class="button-group">
-            <button class="btn-primary" onclick="downloadMCII()">
-              <span>⬇</span>
-              Télécharger mon MCII
-            </button>
-            <button class="btn-secondary" onclick="handleRestart()">
-              <span>↻</span>
-              Recommencer
-            </button>
+            <button class="btn-primary" type="button" onclick="downloadMCII()">⬇ Télécharger mon MCII</button>
+            <button class="btn-secondary" type="button" onclick="handleRestart()">Recommencer</button>
           </div>
 
           <p class="date-text">Date de création : ${new Date().toLocaleDateString('fr-FR')}</p>
@@ -413,81 +302,124 @@
       `;
     }
 
-    function attachEventListeners() {
+    /* --------------------------
+       Écouteurs & interactions
+    ---------------------------*/
+    function attachEventListeners(){
       const input = document.getElementById('input-field');
-      if (input) {
-        input.addEventListener('input', (e) => {
-          data[steps[currentStep].field] = e.target.value;
+      if(input){
+        input.addEventListener('input', (e)=>{
+          const field = steps[state.currentStep].field;
+          state.data[field] = e.target.value;
+          saveState();
+        });
+
+        // Ctrl/Cmd + Enter = Continuer
+        input.addEventListener('keydown', (e)=>{
+          if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+            handleNext();
+          }
         });
       }
     }
 
-    function handleNext() {
-      if (currentStep < steps.length) {
-        currentStep++;
-        render();
+    function handleNext(){
+      // légère validation pour les étapes non optionnelles
+      const step = steps[state.currentStep];
+      if(!step.optional){
+        const val = (state.data[step.field]||'').trim();
+        if(!val){
+          flashFieldError();
+          return;
+        }
+      }
+      if(state.currentStep < steps.length){
+        state.currentStep++;
+        saveState(); render();
       }
     }
 
-    function handleBack() {
-      if (currentStep > 0) {
-        currentStep--;
-        render();
+    function handleBack(){
+      if(state.currentStep > 0){
+        state.currentStep--;
+        saveState(); render();
       }
     }
 
-    function handleSkip() {
-      if (steps[currentStep].optional) {
-        currentStep++;
-        render();
+    function handleSkip(){
+      if(steps[state.currentStep].optional){
+        state.currentStep++;
+        saveState(); render();
       }
     }
 
-    function handleRestart() {
-      currentStep = 0;
-      data = {
-        souhait: '',
-        meilleurResultat: '',
-        obstacle1: '',
-        obstacle2: '',
-        plan1: '',
-        plan2: ''
-      };
-      render();
+    function handleRestart(){
+      if(!confirm('Réinitialiser le MCII et effacer les réponses ?')) return;
+      state = { currentStep:0, data:{ souhait:'', meilleurResultat:'', obstacle1:'', obstacle2:'', plan1:'', plan2:'' } };
+      saveState(); render();
     }
 
-    function downloadMCII() {
-      const content = `MCII - Mon Contrat Mental
-========================
+    function downloadMCII(){
+      const content =
+`MCII - Mon Contrat Mental
+=========================
 
 MON SOUHAIT
-${data.souhait}
+${state.data.souhait}
 
 MON MEILLEUR RÉSULTAT
-${data.meilleurResultat}
+${state.data.meilleurResultat}
 
 MES OBSTACLES
-Principal : ${data.obstacle1}
-${data.obstacle2 ? `Second : ${data.obstacle2}` : ''}
+Principal : ${state.data.obstacle1}
+${state.data.obstacle2 ? `Second : ${state.data.obstacle2}` : ''}
 
 MES PLANS D'ACTION
-Plan 1 : ${data.plan1}
-${data.plan2 ? `Plan 2 : ${data.plan2}` : ''}
+Plan 1 : ${state.data.plan1}
+${state.data.plan2 ? `Plan 2 : ${state.data.plan2}` : ''}
 
 Date de création : ${new Date().toLocaleDateString('fr-FR')}`;
 
-      const blob = new Blob([content], { type: 'text/plain' });
+      const blob = new Blob([content], { type:'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'mon-mcii.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      a.href = url; a.download = 'mon-mcii.txt';
+      document.body.appendChild(a); a.click();
+      a.remove(); URL.revokeObjectURL(url);
     }
 
-    // Initial render
+    /* --------------------------
+       Helpers (sécurité & UX)
+    ---------------------------*/
+    function safe(str=''){
+      // très basique: empêche l'injection HTML dans le résumé
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;');
+    }
+
+    function flashFieldError(){
+      const el = document.getElementById('input-field');
+      if(!el) return;
+      const originalBorder = el.style.borderColor;
+      el.style.borderColor = '#ff3b3b';
+      el.style.boxShadow = '0 0 0 4px rgba(255,59,59,.15)';
+      el.focus();
+      setTimeout(()=>{ el.style.borderColor = ''; el.style.boxShadow=''; }, 450);
+    }
+
+    function saveState(){
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    }
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      }catch(e){ return null; }
+    }
+
+    // Rendu initial
     render();
   </script>
 </body>
