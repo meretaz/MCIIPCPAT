@@ -1,0 +1,297 @@
+import React, { useState } from 'react';
+import { ChevronRight, Download, RefreshCw } from 'lucide-react';
+
+export default function MCIIGenerator() {
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState({
+    souhait: '',
+    meilleurResultat: '',
+    obstacle1: '',
+    obstacle2: '',
+    plan1: '',
+    plan2: ''
+  });
+
+  const steps = [
+    {
+      title: 'Mon Souhait',
+      subtitle: 'Prends 2 minutes pour identifier ton objectif',
+      field: 'souhait',
+      placeholder: 'Quel est ton souhait ou objectif principal ?',
+      description: 'Pense à quelque chose qui compte vraiment pour toi et que tu aimerais accomplir.'
+    },
+    {
+      title: 'Mon Meilleur Résultat',
+      subtitle: 'Prends 3 minutes pour visualiser le meilleur résultat possible',
+      field: 'meilleurResultat',
+      placeholder: 'Imagine le meilleur résultat possible si tu atteins ton souhait...',
+      description: 'Visualise concrètement ce que tu ressentirais et ce qui changerait dans ta vie.'
+    },
+    {
+      title: 'Ton Obstacle Principal',
+      subtitle: 'Prends 3 minutes pour identifier ce qui pourrait t\'empêcher de réussir',
+      field: 'obstacle1',
+      placeholder: 'Quel est ton obstacle principal ?',
+      description: 'Sois honnête avec toi-même sur ce qui pourrait vraiment te bloquer.'
+    },
+    {
+      title: 'Ton Second Obstacle (optionnel)',
+      subtitle: 'Prends 2 minutes si tu veux identifier un autre obstacle',
+      field: 'obstacle2',
+      placeholder: 'Y a-t-il un autre obstacle important ?',
+      description: 'Cette étape est facultative, tu peux passer à la suite si tu veux.',
+      optional: true
+    },
+    {
+      title: 'Ton Plan d\'Action',
+      subtitle: 'Prends 4 minutes pour créer ton plan concret',
+      field: 'plan1',
+      placeholder: 'Si [obstacle], alors je vais [action concrète]...',
+      description: 'Formule un plan d\'action clair : "Si [situation], alors je [action]".'
+    },
+    {
+      title: 'Ton Second Plan (optionnel)',
+      subtitle: 'Prends 3 minutes si tu veux ajouter un plan alternatif',
+      field: 'plan2',
+      placeholder: 'Si [autre situation], alors je vais [autre action]...',
+      description: 'Tu peux créer un second plan pour renforcer ta stratégie.',
+      optional: true
+    }
+  ];
+
+  const handleInputChange = (field, value) => {
+    setData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleNext = () => {
+    if (step < steps.length) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleSkip = () => {
+    if (steps[step].optional) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
+
+  const handleRestart = () => {
+    setStep(0);
+    setData({
+      souhait: '',
+      meilleurResultat: '',
+      obstacle1: '',
+      obstacle2: '',
+      plan1: '',
+      plan2: ''
+    });
+  };
+
+  const generatePDF = () => {
+    const content = `
+      MCII - Mon Contrat Mental
+      ========================
+      
+      MON SOUHAIT
+      ${data.souhait}
+      
+      MON MEILLEUR RÉSULTAT
+      ${data.meilleurResultat}
+      
+      MES OBSTACLES
+      Principal : ${data.obstacle1}
+      ${data.obstacle2 ? `Second : ${data.obstacle2}` : ''}
+      
+      MES PLANS D'ACTION
+      Plan 1 : ${data.plan1}
+      ${data.plan2 ? `Plan 2 : ${data.plan2}` : ''}
+      
+      Date de création : ${new Date().toLocaleDateString('fr-FR')}
+    `;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mon-mcii.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  if (step === steps.length) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 p-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+            <h1 className="text-4xl font-bold text-blue-900 mb-2 text-center">
+              Félicitations ! 🎉
+            </h1>
+            <p className="text-blue-600 text-center mb-8">
+              Tu as complété ton MCII
+            </p>
+
+            <div className="space-y-6">
+              <div className="bg-blue-50 rounded-xl p-6 border-l-4 border-blue-500">
+                <h3 className="text-xl font-bold text-blue-900 mb-3">Mon Souhait</h3>
+                <p className="text-gray-700">{data.souhait}</p>
+              </div>
+
+              <div className="bg-indigo-50 rounded-xl p-6 border-l-4 border-indigo-500">
+                <h3 className="text-xl font-bold text-indigo-900 mb-3">Mon Meilleur Résultat</h3>
+                <p className="text-gray-700">{data.meilleurResultat}</p>
+              </div>
+
+              <div className="bg-blue-50 rounded-xl p-6 border-l-4 border-blue-600">
+                <h3 className="text-xl font-bold text-blue-900 mb-3">
+                  {data.obstacle2 ? 'Mes Obstacles Principaux' : 'Mon Obstacle Principal'}
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-blue-700 text-sm mb-1">Principal</p>
+                    <p className="text-gray-700">{data.obstacle1}</p>
+                  </div>
+                  {data.obstacle2 && (
+                    <div>
+                      <p className="font-semibold text-blue-700 text-sm mb-1">Second</p>
+                      <p className="text-gray-700">{data.obstacle2}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-xl p-6 border-l-4 border-green-500">
+                <h3 className="text-xl font-bold text-green-900 mb-3">
+                  {data.plan2 ? 'Mes Plans d\'Action' : 'Mon Plan d\'Action'}
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-green-700 text-sm mb-1">Plan 1</p>
+                    <p className="text-gray-700">{data.plan1}</p>
+                  </div>
+                  {data.plan2 && (
+                    <div>
+                      <p className="font-semibold text-green-700 text-sm mb-1">Plan 2</p>
+                      <p className="text-gray-700">{data.plan2}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <button
+                onClick={generatePDF}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
+              >
+                <Download size={20} />
+                Télécharger mon MCII
+              </button>
+              <button
+                onClick={handleRestart}
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-700 transition-all shadow-lg hover:shadow-xl"
+              >
+                <RefreshCw size={20} />
+                Recommencer
+              </button>
+            </div>
+
+            <p className="text-center text-gray-500 text-sm mt-6">
+              Date de création : {new Date().toLocaleDateString('fr-FR')}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentStep = steps[step];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 p-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-700">
+              Étape {step + 1} sur {steps.length}
+            </span>
+            <span className="text-sm text-blue-600">
+              {Math.round(((step + 1) / steps.length) * 100)}%
+            </span>
+          </div>
+          <div className="w-full bg-blue-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-blue-900 mb-2">
+              {currentStep.title}
+            </h2>
+            <p className="text-blue-600 italic">
+              {currentStep.subtitle}
+            </p>
+          </div>
+
+          <p className="text-gray-600 mb-6">
+            {currentStep.description}
+          </p>
+
+          <textarea
+            value={data[currentStep.field]}
+            onChange={(e) => handleInputChange(currentStep.field, e.target.value)}
+            placeholder={currentStep.placeholder}
+            className="w-full h-40 p-4 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none text-gray-700"
+          />
+
+          {currentStep.optional && (
+            <p className="text-sm text-gray-500 mt-2">
+              ✨ Cette étape est optionnelle
+            </p>
+          )}
+
+          <div className="flex gap-4 mt-8">
+            {step > 0 && (
+              <button
+                onClick={handleBack}
+                className="px-6 py-3 border-2 border-blue-300 text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all"
+              >
+                Retour
+              </button>
+            )}
+            
+            {currentStep.optional && (
+              <button
+                onClick={handleSkip}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+              >
+                Passer
+              </button>
+            )}
+
+            <button
+              onClick={handleNext}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl disabled:bg-blue-300 disabled:cursor-not-allowed"
+            >
+              {step === steps.length - 1 ? 'Terminer' : 'Continuer'}
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
