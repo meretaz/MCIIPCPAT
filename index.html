@@ -1,113 +1,463 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MCII – Générateur</title>
-    <!-- Tailwind via CDN (simple, pas de build) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React 18 + ReactDOM UMD -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel pour transpiler JSX dans le navigateur (pratique pour GitHub Pages sans build) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  </head>
-  <body class="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
-    <div id="root"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Générateur MCII</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    <!-- Votre composant React, sans imports, transpilé par Babel -->
-    <script type="text/babel">
-      const { useState } = React;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      color: #e0e0e0;
+    }
 
-      function MCIIGenerator() {
-        const [step, setStep] = useState(0);
-        const [data, setData] = useState({
-          souhait: '',
-          meilleurResultat: '',
-          obstacle1: '',
-          obstacle2: '',
-          plan1: '',
-          plan2: ''
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .progress-bar-wrapper {
+      margin-bottom: 2rem;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #60a5fa;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #2d2d44;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .card {
+      background: #1e1e2e;
+      border-radius: 1.5rem;
+      padding: 3rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid #2d2d44;
+    }
+
+    .card-header {
+      margin-bottom: 2rem;
+    }
+
+    .card-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #f0f0f0;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-subtitle {
+      color: #60a5fa;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    .description {
+      color: #a0a0b0;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 1rem;
+      background: #252535;
+      border: 2px solid #3d3d55;
+      border-radius: 1rem;
+      color: #e0e0e0;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: none;
+      transition: border-color 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    textarea::placeholder {
+      color: #6b6b80;
+    }
+
+    .optional-note {
+      font-size: 0.875rem;
+      color: #8b8b9e;
+      margin-top: 0.5rem;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    button {
+      padding: 0.875rem 1.5rem;
+      border: none;
+      border-radius: 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: #2d2d44;
+      color: #e0e0e0;
+      border: 2px solid #3d3d55;
+    }
+
+    .btn-secondary:hover {
+      background: #3d3d55;
+    }
+
+    .summary-section {
+      background: #252535;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid;
+    }
+
+    .summary-section.wish {
+      border-left-color: #3b82f6;
+    }
+
+    .summary-section.result {
+      border-left-color: #60a5fa;
+    }
+
+    .summary-section.obstacle {
+      border-left-color: #8b5cf6;
+    }
+
+    .summary-section.plan {
+      border-left-color: #10b981;
+    }
+
+    .summary-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #f0f0f0;
+      margin-bottom: 1rem;
+    }
+
+    .summary-content {
+      color: #b0b0c0;
+      line-height: 1.6;
+    }
+
+    .summary-item {
+      margin-bottom: 1rem;
+    }
+
+    .summary-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #8b8b9e;
+      margin-bottom: 0.25rem;
+    }
+
+    .celebration-title {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .celebration-subtitle {
+      text-align: center;
+      color: #60a5fa;
+      margin-bottom: 2rem;
+    }
+
+    .date-text {
+      text-align: center;
+      color: #6b6b80;
+      font-size: 0.875rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+
+      .card-title {
+        font-size: 1.5rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app"></div>
+
+  <script>
+    const steps = [
+      {
+        title: 'Mon Souhait',
+        subtitle: 'Prends 2 minutes pour identifier ton objectif',
+        field: 'souhait',
+        placeholder: 'Quel est ton souhait ou objectif principal ?',
+        description: 'Pense à quelque chose qui compte vraiment pour toi et que tu aimerais accomplir.'
+      },
+      {
+        title: 'Mon Meilleur Résultat',
+        subtitle: 'Prends 3 minutes pour visualiser le meilleur résultat possible',
+        field: 'meilleurResultat',
+        placeholder: 'Imagine le meilleur résultat possible si tu atteins ton souhait...',
+        description: 'Visualise concrètement ce que tu ressentirais et ce qui changerait dans ta vie.'
+      },
+      {
+        title: 'Ton Obstacle Principal',
+        subtitle: 'Prends 3 minutes pour identifier ce qui pourrait t\'empêcher de réussir',
+        field: 'obstacle1',
+        placeholder: 'Quel est ton obstacle principal ?',
+        description: 'Sois honnête avec toi-même sur ce qui pourrait vraiment te bloquer.'
+      },
+      {
+        title: 'Ton Second Obstacle (optionnel)',
+        subtitle: 'Prends 2 minutes si tu veux identifier un autre obstacle',
+        field: 'obstacle2',
+        placeholder: 'Y a-t-il un autre obstacle important ?',
+        description: 'Cette étape est facultative, tu peux passer à la suite si tu veux.',
+        optional: true
+      },
+      {
+        title: 'Ton Plan d\'Action',
+        subtitle: 'Prends 4 minutes pour créer ton plan concret',
+        field: 'plan1',
+        placeholder: 'Si [obstacle], alors je vais [action concrète]...',
+        description: 'Formule un plan d\'action clair : "Si [situation], alors je [action]".'
+      },
+      {
+        title: 'Ton Second Plan (optionnel)',
+        subtitle: 'Prends 3 minutes si tu veux ajouter un plan alternatif',
+        field: 'plan2',
+        placeholder: 'Si [autre situation], alors je vais [autre action]...',
+        description: 'Tu peux créer un second plan pour renforcer ta stratégie.',
+        optional: true
+      }
+    ];
+
+    let currentStep = 0;
+    let data = {
+      souhait: '',
+      meilleurResultat: '',
+      obstacle1: '',
+      obstacle2: '',
+      plan1: '',
+      plan2: ''
+    };
+
+    function render() {
+      const app = document.getElementById('app');
+      
+      if (currentStep === steps.length) {
+        app.innerHTML = renderSummary();
+      } else {
+        app.innerHTML = renderStep();
+      }
+      
+      attachEventListeners();
+    }
+
+    function renderStep() {
+      const step = steps[currentStep];
+      const progress = ((currentStep + 1) / steps.length) * 100;
+
+      return `
+        <div class="progress-bar-wrapper">
+          <div class="progress-info">
+            <span>Étape ${currentStep + 1} sur ${steps.length}</span>
+            <span>${Math.round(progress)}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${progress}%"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">${step.title}</h2>
+            <p class="card-subtitle">${step.subtitle}</p>
+          </div>
+
+          <p class="description">${step.description}</p>
+
+          <textarea 
+            id="input-field" 
+            placeholder="${step.placeholder}"
+          >${data[step.field]}</textarea>
+
+          ${step.optional ? '<p class="optional-note">✨ Cette étape est optionnelle</p>' : ''}
+
+          <div class="button-group">
+            ${currentStep > 0 ? '<button class="btn-secondary" onclick="handleBack()">Retour</button>' : ''}
+            ${step.optional ? '<button class="btn-secondary" onclick="handleSkip()">Passer</button>' : ''}
+            <button class="btn-primary" onclick="handleNext()">
+              ${currentStep === steps.length - 1 ? 'Terminer' : 'Continuer'}
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSummary() {
+      return `
+        <div class="card">
+          <h1 class="celebration-title">Félicitations ! 🎉</h1>
+          <p class="celebration-subtitle">Tu as complété ton MCII</p>
+
+          <div class="summary-section wish">
+            <h3 class="summary-title">Mon Souhait</h3>
+            <p class="summary-content">${data.souhait}</p>
+          </div>
+
+          <div class="summary-section result">
+            <h3 class="summary-title">Mon Meilleur Résultat</h3>
+            <p class="summary-content">${data.meilleurResultat}</p>
+          </div>
+
+          <div class="summary-section obstacle">
+            <h3 class="summary-title">${data.obstacle2 ? 'Mes Obstacles Principaux' : 'Mon Obstacle Principal'}</h3>
+            <div class="summary-item">
+              <p class="summary-label">Principal</p>
+              <p class="summary-content">${data.obstacle1}</p>
+            </div>
+            ${data.obstacle2 ? `
+              <div class="summary-item">
+                <p class="summary-label">Second</p>
+                <p class="summary-content">${data.obstacle2}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="summary-section plan">
+            <h3 class="summary-title">${data.plan2 ? 'Mes Plans d\'Action' : 'Mon Plan d\'Action'}</h3>
+            <div class="summary-item">
+              <p class="summary-label">Plan 1</p>
+              <p class="summary-content">${data.plan1}</p>
+            </div>
+            ${data.plan2 ? `
+              <div class="summary-item">
+                <p class="summary-label">Plan 2</p>
+                <p class="summary-content">${data.plan2}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="button-group">
+            <button class="btn-primary" onclick="downloadMCII()">
+              <span>⬇</span>
+              Télécharger mon MCII
+            </button>
+            <button class="btn-secondary" onclick="handleRestart()">
+              <span>↻</span>
+              Recommencer
+            </button>
+          </div>
+
+          <p class="date-text">Date de création : ${new Date().toLocaleDateString('fr-FR')}</p>
+        </div>
+      `;
+    }
+
+    function attachEventListeners() {
+      const input = document.getElementById('input-field');
+      if (input) {
+        input.addEventListener('input', (e) => {
+          data[steps[currentStep].field] = e.target.value;
         });
+      }
+    }
 
-        const steps = [
-          {
-            title: 'Mon Souhait',
-            subtitle: "Prends 2 minutes pour identifier ton objectif",
-            field: 'souhait',
-            placeholder: 'Quel est ton souhait ou objectif principal ?',
-            description: "Pense à quelque chose qui compte vraiment pour toi et que tu aimerais accomplir."
-          },
-          {
-            title: 'Mon Meilleur Résultat',
-            subtitle: "Prends 3 minutes pour visualiser le meilleur résultat possible",
-            field: 'meilleurResultat',
-            placeholder: "Imagine le meilleur résultat possible si tu atteins ton souhait...",
-            description: "Visualise concrètement ce que tu ressentirais et ce qui changerait dans ta vie."
-          },
-          {
-            title: 'Ton Obstacle Principal',
-            subtitle: "Prends 3 minutes pour identifier ce qui pourrait t'empêcher de réussir",
-            field: 'obstacle1',
-            placeholder: 'Quel est ton obstacle principal ?',
-            description: "Sois honnête avec toi-même sur ce qui pourrait vraiment te bloquer."
-          },
-          {
-            title: 'Ton Second Obstacle (optionnel)',
-            subtitle: "Prends 2 minutes si tu veux identifier un autre obstacle",
-            field: 'obstacle2',
-            placeholder: "Y a-t-il un autre obstacle important ?",
-            description: "Cette étape est facultative, tu peux passer à la suite si tu veux.",
-            optional: true
-          },
-          {
-            title: "Ton Plan d'Action",
-            subtitle: "Prends 4 minutes pour créer ton plan concret",
-            field: 'plan1',
-            placeholder: "Si [obstacle], alors je vais [action concrète]...",
-            description: 'Formule un plan d\\'action clair : "Si [situation], alors je [action]".'
-          },
-          {
-            title: 'Ton Second Plan (optionnel)',
-            subtitle: "Prends 3 minutes si tu veux ajouter un plan alternatif",
-            field: 'plan2',
-            placeholder: "Si [autre situation], alors je vais [autre action]...",
-            description: 'Tu peux créer un second plan pour renforcer ta stratégie.',
-            optional: true
-          }
-        ];
+    function handleNext() {
+      if (currentStep < steps.length) {
+        currentStep++;
+        render();
+      }
+    }
 
-        const handleInputChange = (field, value) => {
-          setData(prev => ({ ...prev, [field]: value }));
-        };
+    function handleBack() {
+      if (currentStep > 0) {
+        currentStep--;
+        render();
+      }
+    }
 
-        const handleNext = () => {
-          if (step < steps.length) setStep(step + 1);
-        };
+    function handleSkip() {
+      if (steps[currentStep].optional) {
+        currentStep++;
+        render();
+      }
+    }
 
-        const handleSkip = () => {
-          if (steps[step].optional) setStep(step + 1);
-        };
+    function handleRestart() {
+      currentStep = 0;
+      data = {
+        souhait: '',
+        meilleurResultat: '',
+        obstacle1: '',
+        obstacle2: '',
+        plan1: '',
+        plan2: ''
+      };
+      render();
+    }
 
-        const handleBack = () => {
-          if (step > 0) setStep(step - 1);
-        };
-
-        const handleRestart = () => {
-          setStep(0);
-          setData({
-            souhait: '',
-            meilleurResultat: '',
-            obstacle1: '',
-            obstacle2: '',
-            plan1: '',
-            plan2: ''
-          });
-        };
-
-        const generateTXT = () => {
-          const content = `
-MCII - Mon Contrat Mental
+    function downloadMCII() {
+      const content = `MCII - Mon Contrat Mental
 ========================
 
 MON SOUHAIT
@@ -124,188 +474,21 @@ MES PLANS D'ACTION
 Plan 1 : ${data.plan1}
 ${data.plan2 ? `Plan 2 : ${data.plan2}` : ''}
 
-Date de création : ${new Date().toLocaleDateString('fr-FR')}
-`;
-          const blob = new Blob([content], { type: 'text/plain' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'mon-mcii.txt';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        };
+Date de création : ${new Date().toLocaleDateString('fr-FR')}`;
 
-        if (step === steps.length) {
-          return (
-            <div className="min-h-screen p-6">
-              <div className="max-w-3xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-                  <h1 className="text-4xl font-bold text-blue-900 mb-2 text-center">
-                    Félicitations ! 🎉
-                  </h1>
-                  <p className="text-blue-600 text-center mb-8">
-                    Tu as complété ton MCII
-                  </p>
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mon-mcii.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
 
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 rounded-xl p-6 border-l-4 border-blue-500">
-                      <h3 className="text-xl font-bold text-blue-900 mb-3">Mon Souhait</h3>
-                      <p className="text-gray-700 whitespace-pre-line">{data.souhait}</p>
-                    </div>
-
-                    <div className="bg-indigo-50 rounded-xl p-6 border-l-4 border-indigo-500">
-                      <h3 className="text-xl font-bold text-indigo-900 mb-3">Mon Meilleur Résultat</h3>
-                      <p className="text-gray-700 whitespace-pre-line">{data.meilleurResultat}</p>
-                    </div>
-
-                    <div className="bg-blue-50 rounded-xl p-6 border-l-4 border-blue-600">
-                      <h3 className="text-xl font-bold text-blue-900 mb-3">
-                        {data.obstacle2 ? 'Mes Obstacles Principaux' : 'Mon Obstacle Principal'}
-                      </h3>
-                      <div className="space-y-3">
-                        <div>
-                          <p className="font-semibold text-blue-700 text-sm mb-1">Principal</p>
-                          <p className="text-gray-700 whitespace-pre-line">{data.obstacle1}</p>
-                        </div>
-                        {data.obstacle2 && (
-                          <div>
-                            <p className="font-semibold text-blue-700 text-sm mb-1">Second</p>
-                            <p className="text-gray-700 whitespace-pre-line">{data.obstacle2}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="bg-green-50 rounded-xl p-6 border-l-4 border-green-500">
-                      <h3 className="text-xl font-bold text-green-900 mb-3">
-                        {data.plan2 ? "Mes Plans d'Action" : "Mon Plan d'Action"}
-                      </h3>
-                      <div className="space-y-3">
-                        <div>
-                          <p className="font-semibold text-green-700 text-sm mb-1">Plan 1</p>
-                          <p className="text-gray-700 whitespace-pre-line">{data.plan1}</p>
-                        </div>
-                        {data.plan2 && (
-                          <div>
-                            <p className="font-semibold text-green-700 text-sm mb-1">Plan 2</p>
-                            <p className="text-gray-700 whitespace-pre-line">{data.plan2}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                    <button
-                      onClick={generateTXT}
-                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
-                    >
-                      ⬇️ Télécharger mon MCII
-                    </button>
-                    <button
-                      onClick={handleRestart}
-                      className="flex-1 flex items-center justify-center gap-2 bg-gray-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-700 transition-all shadow-lg hover:shadow-xl"
-                    >
-                      🔄 Recommencer
-                    </button>
-                  </div>
-
-                  <p className="text-center text-gray-500 text-sm mt-6">
-                    Date de création : {new Date().toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        const currentStep = steps[step];
-
-        return (
-          <div className="min-h-screen p-6">
-            <div className="max-w-2xl mx-auto">
-              {/* Progress Bar */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-blue-700">
-                    Étape {step + 1} sur {steps.length}
-                  </span>
-                  <span className="text-sm text-blue-600">
-                    {Math.round(((step + 1) / steps.length) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Main Card */}
-              <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
-                <div className="mb-6">
-                  <h2 className="text-3xl font-bold text-blue-900 mb-2">
-                    {currentStep.title}
-                  </h2>
-                  <p className="text-blue-600 italic">
-                    {currentStep.subtitle}
-                  </p>
-                </div>
-
-                <p className="text-gray-600 mb-6">
-                  {currentStep.description}
-                </p>
-
-                <textarea
-                  value={data[currentStep.field]}
-                  onChange={(e) => handleInputChange(currentStep.field, e.target.value)}
-                  placeholder={currentStep.placeholder}
-                  className="w-full h-40 p-4 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none text-gray-700"
-                />
-
-                {currentStep.optional && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    ✨ Cette étape est optionnelle
-                  </p>
-                )}
-
-                <div className="flex gap-4 mt-8">
-                  {step > 0 && (
-                    <button
-                      onClick={handleBack}
-                      className="px-6 py-3 border-2 border-blue-300 text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all"
-                    >
-                      ← Retour
-                    </button>
-                  )}
-                  
-                  {currentStep.optional && (
-                    <button
-                      onClick={handleSkip}
-                      className="px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-all"
-                    >
-                      Passer
-                    </button>
-                  )}
-
-                  <button
-                    onClick={handleNext}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl disabled:bg-blue-300 disabled:cursor-not-allowed"
-                  >
-                    {step === steps.length - 1 ? 'Terminer' : 'Continuer'} →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<MCIIGenerator />);
-    </script>
-  </body>
+    // Initial render
+    render();
+  </script>
+</body>
 </html>
